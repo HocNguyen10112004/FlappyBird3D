@@ -89,4 +89,54 @@ export class Bird {
   get position() {
     return this.model ? this.model.position : new THREE.Vector3();
   }
+  jumpToLeftPipe(pipes) {
+  if (!this.model || !pipes) return;
+
+  const birdX = this.model.position.x;
+  const frontPipes = pipes.filter(pipe => pipe.centerX > birdX);
+  if (frontPipes.length === 0) return;
+
+  const nearestPipe = frontPipes.reduce((prev, curr) => (curr.centerX < prev.centerX ? curr : prev));
+
+  if (this.currentPipeIndex === undefined) this.currentPipeIndex = 1; // mặc định giữa
+
+  // Nếu chim đang ở pipe giữa (1), nhảy sang pipe trái (0)
+  // Nếu chim đang ở pipe phải (2), nhảy về pipe giữa (1)
+  if (this.currentPipeIndex === 1) {
+    this.currentPipeIndex = 0;
+  } else if (this.currentPipeIndex === 2) {
+    this.currentPipeIndex = 1;
+  }
+
+  const leftPipeZ = nearestPipe.lowerPipes[this.currentPipeIndex].position.z;
+
+  this.model.position.z = leftPipeZ;
+  this.jump();
+}
+
+jumpToRightPipe(pipes) {
+  if (!this.model || !pipes) return;
+
+  const birdX = this.model.position.x;
+  const frontPipes = pipes.filter(pipe => pipe.centerX > birdX);
+  if (frontPipes.length === 0) return;
+
+  const nearestPipe = frontPipes.reduce((prev, curr) => (curr.centerX < prev.centerX ? curr : prev));
+
+  if (this.currentPipeIndex === undefined) this.currentPipeIndex = 1; // mặc định giữa
+
+  // Nếu chim đang ở pipe giữa (1), nhảy sang pipe phải (2)
+  // Nếu chim đang ở pipe trái (0), nhảy về pipe giữa (1)
+  if (this.currentPipeIndex === 1) {
+    this.currentPipeIndex = 2;
+  } else if (this.currentPipeIndex === 0) {
+    this.currentPipeIndex = 1;
+  }
+
+  const rightPipeZ = nearestPipe.lowerPipes[this.currentPipeIndex].position.z;
+
+  this.model.position.z = rightPipeZ;
+  this.jump();
+}
+
 }

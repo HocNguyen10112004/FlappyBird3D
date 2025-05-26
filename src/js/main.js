@@ -204,3 +204,24 @@ cuttingBox2.position.set(0, 15, 0);
 // Thêm vào scene
 scene.add(cuttingBox1);
 scene.add(cuttingBox2);
+
+//
+window.addEventListener('keydown', (e) => {
+  if (!gameStarted) return;
+  if (e.button === 0) { // nút chuột trái
+    bird.jump();
+  }
+  switch (e.code) {
+    case 'ArrowLeft':
+    case 'KeyA':
+      bird.jumpToLeftPipe(pipes);
+      break;
+    case 'ArrowRight':
+    case 'KeyD':
+      bird.jumpToRightPipe(pipes);
+      break;
+    case 'Space':
+      bird.jump();
+      break;
+  }
+});
