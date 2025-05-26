@@ -6,7 +6,7 @@ export class PipePair {
     this.scene = scene;
     this.x = x;
     this.gapHeight = gapHeight;
-    this.gap = 15;
+    this.gap = 13;
     this.upperPipe = null;
     this.lowerPipe = null;
     this.loaded = false;

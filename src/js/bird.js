@@ -72,11 +72,14 @@ export class Bird {
   }
 
   // Giới hạn dưới chim không rơi quá thấp
-  if (this.model.position.y < minY) {
-    this.model.position.y = minY;
+  if (this.model.position.y < -10) {
+    this.model.position.y = -10;
     this.velocityY = 0;
   }
-
+  if (this.model.position.y > 9) {
+    this.model.position.y = 9;
+    this.velocityY = 0;
+  }
   if (this.mixer) {
     this.mixer.update(deltaTime);
   }

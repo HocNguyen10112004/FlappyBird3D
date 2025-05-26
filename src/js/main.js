@@ -166,3 +166,35 @@ loader.load('./assets/qwantani_puresky.webp', function(texture){
   const sky = new THREE.Mesh(geometry, material);
   scene.add(sky);
 });
+
+//
+// Tạo hình hộp chữ nhật rất mỏng (thay cho mặt phẳng)
+const boxWidth = 200;
+const boxHeight = 10;   // cao rất thấp để giống mặt phẳng
+const boxDepth = 20;
+
+const boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+const textureLoader = new THREE.TextureLoader();
+const texture = textureLoader.load('./assets/perfect-green-grass.jpg');
+// Tạo vật liệu màu xanh nhẹ, có thể trong suốt
+texture.wrapS = THREE.RepeatWrapping;
+texture.wrapT = THREE.RepeatWrapping;
+texture.repeat.set(10, 1); // lặp 10 lần ngang, 1 lần dọc
+
+const boxMaterial = new THREE.MeshPhongMaterial({
+  map: texture,
+  side: THREE.DoubleSide,
+  transparent: false,
+});
+
+// Tạo 2 hộp
+const cuttingBox1 = new THREE.Mesh(boxGeometry, boxMaterial);
+const cuttingBox2 = new THREE.Mesh(boxGeometry, boxMaterial);
+
+// Đặt vị trí và xoay nằm ngang (giữ nguyên trục x,y,z)
+cuttingBox1.position.set(0, -15, 0);
+cuttingBox2.position.set(0, 15, 0);
+
+// Thêm vào scene
+scene.add(cuttingBox1);
+scene.add(cuttingBox2);
