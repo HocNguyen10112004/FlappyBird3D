@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flappy Bird 3D với Phoenix Bird GLB</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+
+    /* Nút start game */
+    #startButton {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      padding: 10px 20px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #startButton:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <button id="startButton">Start Game</button>
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
