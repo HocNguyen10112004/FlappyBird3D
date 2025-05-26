@@ -37,7 +37,7 @@ for(let i=0; i<pipeCount; i++){
   const pipePair = new PipePair(scene, 5 + i*pipeSpacing);
   pipes.push(pipePair);
 }
-
+scene.pipes = pipes;
 // Gán pipesCount để tính toán vị trí reset trong PipePair
 scene.pipesCount = pipeCount;
 
@@ -47,15 +47,21 @@ let pipesStarted = false;
 let pipesDelayTimer = 0;
 const pipesStartDelay = 3; // delay 3 giây trước khi pipe chạy
 
-function checkCollision(){
-  if(!bird.model) return false;
+function checkCollision() {
+  if (!bird.model) return false;
   const birdBox = new THREE.Box3().setFromObject(bird.model);
 
-  for(let pipe of pipes){
-    const lowerBox = new THREE.Box3().setFromObject(pipe.lowerPipe);
-    const upperBox = new THREE.Box3().setFromObject(pipe.upperPipe);
-    if(birdBox.intersectsBox(lowerBox) || birdBox.intersectsBox(upperBox)){
-      return true;
+  for (let pipeGroup of pipes) {
+    for (let pipeIndex = 0; pipeIndex < 3; pipeIndex++){
+      // Kiểm tra pipe đã load chưa
+      if (!pipeGroup.lowerPipes[pipeIndex] || !pipeGroup.upperPipes[pipeIndex]) continue;
+
+      const lowerBox = new THREE.Box3().setFromObject(pipeGroup.lowerPipes[pipeIndex]);
+      const upperBox = new THREE.Box3().setFromObject(pipeGroup.upperPipes[pipeIndex]);
+
+      if (birdBox.intersectsBox(lowerBox) || birdBox.intersectsBox(upperBox)) {
+        return true;
+      }
     }
   }
   return false;

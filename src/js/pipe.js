@@ -2,35 +2,44 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export class PipePair {
-  constructor(scene, x, gapHeight = 5) {
+  constructor(scene, centerX, gapHeight = 5, pipeCount = 3, pipeSpacing = 5) {
     this.scene = scene;
-    this.x = x;
+    this.centerX = centerX;
     this.gapHeight = gapHeight;
     this.gap = 13;
-    this.upperPipe = null;
-    this.lowerPipe = null;
+    this.pipeCount = pipeCount;
+    this.pipeSpacing = pipeSpacing;
+    this.upperPipes = [];
+    this.lowerPipes = [];
     this.loaded = false;
+    this.scored = false;
 
-    // Sinh vị trí gap ngẫu nhiên cho mỗi cột (ví dụ trong khoảng -5 đến +5)
     this.gapCenterY = Math.random() * 10 - 5;
 
     const loader = new GLTFLoader();
     loader.load(
       './assets/flappy_bird_pipes_single_long_pipe/scene.gltf',
       (gltf) => {
-        this.upperPipe = gltf.scene.clone();
-        this.upperPipe.scale.set(1, 1, 1);
-        this.upperPipe.rotation.set(0, 0, Math.PI);
-        this.upperPipe.position.set(this.x, this.gapCenterY + this.gapHeight / 2 + this.gap, 0);
+        for(let i = 0; i < this.pipeCount; i++) {
+          // Tính offset theo trục Z (khác biệt với trước)
+          const offsetZ = (i - (this.pipeCount - 1) / 2) * this.pipeSpacing;
 
-        this.lowerPipe = gltf.scene;
-        this.lowerPipe.scale.set(1, 1, 1);
-        this.lowerPipe.rotation.set(0, 0, 0);
-        this.lowerPipe.position.set(this.x, this.gapCenterY - this.gapHeight / 2 - this.gap, 0);
+          // Pipe trên
+          const upperPipe = gltf.scene.clone();
+          upperPipe.scale.set(1,1,1);
+          upperPipe.rotation.set(0, 0, Math.PI);
+          upperPipe.position.set(this.centerX, this.gapCenterY + this.gapHeight / 2 + this.gap, offsetZ);
+          scene.add(upperPipe);
+          this.upperPipes.push(upperPipe);
 
-        scene.add(this.upperPipe);
-        scene.add(this.lowerPipe);
-
+          // Pipe dưới
+          const lowerPipe = gltf.scene.clone();
+          lowerPipe.scale.set(1,1,1);
+          lowerPipe.rotation.set(0, 0, 0);
+          lowerPipe.position.set(this.centerX, this.gapCenterY - this.gapHeight / 2 - this.gap, offsetZ);
+          scene.add(lowerPipe);
+          this.lowerPipes.push(lowerPipe);
+        }
         this.loaded = true;
       },
       undefined,
@@ -38,37 +47,39 @@ export class PipePair {
         console.error('Lỗi load model pipe:', error);
       }
     );
-
-    this.scored = false;
   }
 
-  setPosition(x) {
-    this.x = x;
+  setPosition(centerX) {
+    this.centerX = centerX;
     if (!this.loaded) return;
 
-    // Khi thay đổi vị trí x, vẫn giữ nguyên vị trí y theo gapCenterY
-    this.upperPipe.position.x = x;
-    this.lowerPipe.position.x = x;
+    for(let i = 0; i < this.pipeCount; i++) {
+      const offsetZ = (i - (this.pipeCount - 1) / 2) * this.pipeSpacing;
+      this.upperPipes[i].position.x = centerX;
+      this.upperPipes[i].position.y = this.gapCenterY + this.gapHeight / 2 + this.gap;
+      this.upperPipes[i].position.z = offsetZ;
 
-    this.upperPipe.position.y = this.gapCenterY + this.gapHeight / 2 + this.gap;
-    this.lowerPipe.position.y = this.gapCenterY - this.gapHeight / 2 - this.gap;
+      this.lowerPipes[i].position.x = centerX;
+      this.lowerPipes[i].position.y = this.gapCenterY - this.gapHeight / 2 - this.gap;
+      this.lowerPipes[i].position.z = offsetZ;
+    }
   }
 
   update(speed = 0.05) {
     if (!this.loaded) return;
 
-    this.setPosition(this.x - speed);
+    this.setPosition(this.centerX - speed);
 
-    if (this.x < -5) {
-      // Khi reset vị trí, sinh lại vị trí gapCenterY mới cho random gap vị trí
+    if (this.centerX < -5) {
       this.gapCenterY = Math.random() * 10 - 5;
 
-      this.setPosition(5 + 10 * (this.scene.pipesCount - 1));
+      const maxX = Math.max(...this.scene.pipes.map(p => p.centerX));
+      this.setPosition(maxX + 10);
       this.scored = false;
     }
   }
 
   get position() {
-    return new THREE.Vector3(this.x, this.gapCenterY, 0);
+    return new THREE.Vector3(this.centerX, this.gapCenterY, 0);
   }
 }
