@@ -90,53 +90,65 @@ export class Bird {
     return this.model ? this.model.position : new THREE.Vector3();
   }
   jumpToLeftPipe(pipes) {
-  if (!this.model || !pipes) return;
+    if (!this.model || !pipes) return;
 
-  const birdX = this.model.position.x;
-  const frontPipes = pipes.filter(pipe => pipe.centerX > birdX);
-  if (frontPipes.length === 0) return;
+    const birdX = this.model.position.x;
+    const frontPipes = pipes.filter(pipe => pipe.centerX > birdX);
+    if (frontPipes.length === 0) return;
 
-  const nearestPipe = frontPipes.reduce((prev, curr) => (curr.centerX < prev.centerX ? curr : prev));
+    const nearestPipe = frontPipes.reduce((prev, curr) => (curr.centerX < prev.centerX ? curr : prev));
 
-  if (this.currentPipeIndex === undefined) this.currentPipeIndex = 1; // mặc định giữa
+    if (this.currentPipeIndex === undefined) this.currentPipeIndex = 1; // mặc định giữa
 
-  // Nếu chim đang ở pipe giữa (1), nhảy sang pipe trái (0)
-  // Nếu chim đang ở pipe phải (2), nhảy về pipe giữa (1)
-  if (this.currentPipeIndex === 1) {
-    this.currentPipeIndex = 0;
-  } else if (this.currentPipeIndex === 2) {
-    this.currentPipeIndex = 1;
+    // Nếu chim đang ở pipe giữa (1), nhảy sang pipe trái (0)
+    // Nếu chim đang ở pipe phải (2), nhảy về pipe giữa (1)
+    if (this.currentPipeIndex === 1) {
+      this.currentPipeIndex = 0;
+    } else if (this.currentPipeIndex === 2) {
+      this.currentPipeIndex = 1;
+    }
+
+    const leftPipeZ = nearestPipe.lowerPipes[this.currentPipeIndex].position.z;
+
+    this.model.position.z = leftPipeZ;
+    this.jump();
   }
 
-  const leftPipeZ = nearestPipe.lowerPipes[this.currentPipeIndex].position.z;
+  jumpToRightPipe(pipes) {
+    if (!this.model || !pipes) return;
 
-  this.model.position.z = leftPipeZ;
-  this.jump();
-}
+    const birdX = this.model.position.x;
+    const frontPipes = pipes.filter(pipe => pipe.centerX > birdX);
+    if (frontPipes.length === 0) return;
 
-jumpToRightPipe(pipes) {
-  if (!this.model || !pipes) return;
+    const nearestPipe = frontPipes.reduce((prev, curr) => (curr.centerX < prev.centerX ? curr : prev));
 
-  const birdX = this.model.position.x;
-  const frontPipes = pipes.filter(pipe => pipe.centerX > birdX);
-  if (frontPipes.length === 0) return;
+    if (this.currentPipeIndex === undefined) this.currentPipeIndex = 1; // mặc định giữa
 
-  const nearestPipe = frontPipes.reduce((prev, curr) => (curr.centerX < prev.centerX ? curr : prev));
+    // Nếu chim đang ở pipe giữa (1), nhảy sang pipe phải (2)
+    // Nếu chim đang ở pipe trái (0), nhảy về pipe giữa (1)
+    if (this.currentPipeIndex === 1) {
+      this.currentPipeIndex = 2;
+    } else if (this.currentPipeIndex === 0) {
+      this.currentPipeIndex = 1;
+    }
 
-  if (this.currentPipeIndex === undefined) this.currentPipeIndex = 1; // mặc định giữa
+    const rightPipeZ = nearestPipe.lowerPipes[this.currentPipeIndex].position.z;
 
-  // Nếu chim đang ở pipe giữa (1), nhảy sang pipe phải (2)
-  // Nếu chim đang ở pipe trái (0), nhảy về pipe giữa (1)
-  if (this.currentPipeIndex === 1) {
-    this.currentPipeIndex = 2;
-  } else if (this.currentPipeIndex === 0) {
-    this.currentPipeIndex = 1;
+    this.model.position.z = rightPipeZ;
+    this.jump();
   }
+  boost() {
+  if (!this.model) return;
 
-  const rightPipeZ = nearestPipe.lowerPipes[this.currentPipeIndex].position.z;
+  // Tăng vận tốc lên để chim bay lên nhanh hơn
+  // Bạn có thể điều chỉnh giá trị boostPower theo ý muốn
+  const boostPower = 1;
+  this.velocityY = boostPower;
 
-  this.model.position.z = rightPipeZ;
-  this.jump();
+  // Có thể chơi âm thanh nếu muốn
+  // jumpSound.currentTime = 0;
+  // jumpSound.play().catch(e => console.log('Lỗi phát âm thanh boost:', e));
 }
 
 }

@@ -79,8 +79,8 @@ function checkScore(){
 
 function resetGame(){
   score = 0;
-  pipesStarted = false;
-  pipesDelayTimer = 0; // reset bộ đếm delay
+  pipesStarted = false;    // reset lại flag pipesStarted
+  pipesDelayTimer = 0;     // reset lại bộ đếm delay
   console.log('Điểm: 0');
 
   pipes.forEach((pipe,i)=>{
@@ -96,6 +96,7 @@ function resetGame(){
   const btn = document.getElementById('startButton');
   if(btn) btn.style.display = 'block';
 }
+
 
 function startGame(){
   if(!bird.model){
@@ -118,29 +119,27 @@ window.addEventListener('click', ()=>{
 
 const clock = new THREE.Clock();
 
-function animate(){
+function animate() {
   requestAnimationFrame(animate);
 
-  if(gameStarted){
+  if (gameStarted && !gamePaused) {
+    // Cập nhật game, di chuyển chim, pipes, check va chạm
     const delta = clock.getDelta();
-    bird.update(delta, pipes);  // <-- truyền pipes vào đây
+    bird.update(delta, pipes);
 
-    if(!pipesStarted){
+    if (!pipesStarted) {
       pipesDelayTimer += delta;
-      if(pipesDelayTimer >= pipesStartDelay){
+      if (pipesDelayTimer >= pipesStartDelay) {
         pipesStarted = true;
       }
     }
 
-    if(pipesStarted){
-      pipes.forEach(pipe=>{
-        pipe.update(0.05);
-      });
-
+    if (pipesStarted) {
+      pipes.forEach(pipe => pipe.update(0.05));
       checkScore();
 
-      if(checkCollision()){
-        hitSound.currentTime = 0; // phát lại từ đầu
+      if (checkCollision()) {
+        hitSound.currentTime = 0;
         hitSound.play().catch(e => console.log('Lỗi phát âm thanh hit:', e));
         alert('Game Over! Điểm: ' + score);
         resetGame();
@@ -206,11 +205,36 @@ scene.add(cuttingBox1);
 scene.add(cuttingBox2);
 
 //
-window.addEventListener('keydown', (e) => {
-  if (!gameStarted) return;
-  if (e.button === 0) { // nút chuột trái
-    bird.jump();
+window.addEventListener('keydown', e => {
+  // Chặn hành vi mặc định của các phím mũi tên
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+    e.preventDefault();
   }
+  if (e.code === 'Enter') {
+    if (gameStarted && !gamePaused && bird.model) {
+      bird.boost();
+      
+      console.log('Chim bay nhanh đột ngột!');
+    }
+    return;
+  }
+  if (e.code === 'ArrowDown') {
+    togglePause();
+    return; // dừng xử lý tiếp theo khi toggle pause
+  }
+
+  if (e.code === 'Space') {
+    if (!gameStarted) {
+      startGame();
+    } else if (gameStarted && pipesStarted && checkCollision()) {
+      resetGame();
+    } else if (!gamePaused) {
+      bird.jump();
+    }
+  }
+
+  if (!gameStarted || gamePaused) return;
+
   switch (e.code) {
     case 'ArrowLeft':
     case 'KeyA':
@@ -220,8 +244,29 @@ window.addEventListener('keydown', (e) => {
     case 'KeyD':
       bird.jumpToRightPipe(pipes);
       break;
-    case 'Space':
+    case 'ArrowUp':
+    case 'KeyW':
       bird.jump();
       break;
   }
 });
+window.addEventListener('keydown', e => {
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+    e.preventDefault();
+  }
+});
+let gamePaused = false;
+
+function togglePause() {
+  if (!gameStarted) return; // Chỉ cho phép pause khi game đang chạy
+  gamePaused = !gamePaused;
+
+  const pauseBtn = document.getElementById('pauseButton');
+  if (gamePaused) {
+    pauseBtn.innerText = 'Resume';
+    console.log('Game tạm dừng');
+  } else {
+    pauseBtn.innerText = 'Pause';
+    console.log('Game tiếp tục');
+  }
+}
