@@ -7,4 +7,4 @@ Use arrow buttons on keyboard to play: ArrowUp to jump, ArrowDown to pause and r
 
 Hold left mouse button and move to change the view angle, Hold right mouse button and move to change viewing position, Scroll the mouse to zoom in and zoom out
 
-![Uploading image.png…]()
+![image](https://github.com/user-attachments/assets/345cd863-8366-4c74-a9aa-3f4899647738)
