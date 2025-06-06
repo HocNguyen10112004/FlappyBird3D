@@ -4,8 +4,8 @@ const jumpSound = new Audio('./assets/sounds/boing-spring-mouth-harp-04-20-13-4-
 export class Bird {
   constructor(scene, modelPath = './assets/phoenix_bird/scene.gltf') {
     this.velocityY = 0;
-    this.gravity = -0.006;
-    this.jumpPower = 0.18;
+    this.gravity = -0.003;
+    this.jumpPower = 0.11;
     this.lowestPoint = -10;
     this.scale = 0.004;
     this.scene = scene;
