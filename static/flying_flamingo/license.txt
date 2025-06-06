@@ -1,0 +1,8 @@
+Model Information:
+* title:	Flying Flamingo
+* source:	https://sketchfab.com/3d-models/flying-flamingo-64d19a9497da4ddb9c4538ad1287a424
+* author:	Michael (https://sketchfab.com/michaelkolesidis)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works
