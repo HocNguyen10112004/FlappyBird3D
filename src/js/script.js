@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 
 // Tạo scene, camera, renderer
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(5, 5, 10);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 190);
+camera.position.set(0, 0, 15);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -21,8 +22,16 @@ scene.add(directionalLight);
 
 // Khởi tạo OrbitControls
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableZoom = false;
+controls.enablePan = false;
 controls.target.set(0, 0, 0);
-controls.update();
+// controls.update();
+
+// const controls = new TrackballControls(camera, renderer.domElement);
+// controls.noZoom = true;
+// controls.noPan = true;
+// controls.rotateSpeed = 5.0;
+// controls.update();
 
 // Khai báo loader
 const loader = new GLTFLoader();
