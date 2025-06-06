@@ -58,3 +58,23 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// Hàm hiển thị và cập nhật thời gian tác dụng của item
+function showItemTimer(duration) {
+  const timerDiv = document.getElementById('item-timer');
+  timerDiv.style.display = 'block';
+  let timeLeft = duration;
+  timerDiv.textContent = `${timeLeft}s`;
+
+  const interval = setInterval(() => {
+    timeLeft--;
+    timerDiv.textContent = `${timeLeft}s`;
+    if (timeLeft <= 0) {
+      clearInterval(interval);
+      timerDiv.style.display = 'none';
+    }
+  }, 1000);
+}
+
+// Ví dụ: Gọi hàm này khi nhận item, ví dụ 5 giây
+showItemTimer(5);

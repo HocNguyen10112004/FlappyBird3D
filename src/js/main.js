@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Bird } from './bird.js';
 import { PipePair } from './pipe.js'; 
 import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
+import { PowerUp, POWERUP_TYPES } from './powerup.js';
 
 const hitSound = new Audio('./assets/sounds/low-metal-hit-2-81779.mp3');
 const scene = new THREE.Scene();
@@ -42,10 +43,44 @@ scene.pipes = pipes;
 scene.pipesCount = pipeCount;
 
 let score = 0;
+updateScoreBoard(); // Thêm dòng này ngay sau khai báo score
 let gameStarted = false;
 let pipesStarted = false;
 let pipesDelayTimer = 0;
 const pipesStartDelay = 3; // delay 3 giây trước khi pipe chạy
+
+let immune = false;
+let immuneTimer = 0;
+let speedModifier = 1;
+let speedTimer = 0;
+
+const powerUps = [];
+
+function spawnPowerUp() {
+  // Nếu đã có power up đang active thì không spawn mới
+  if (powerUps.some(pu => pu.active)) return;
+
+  if (!pipes.length) return;
+  const nextPipe = pipes.find(pipe => pipe.centerX > bird.model.position.x && pipe.loaded);
+  if (!nextPipe) return;
+  const typeArr = [POWERUP_TYPES.POINT, POWERUP_TYPES.SPEED_UP, POWERUP_TYPES.SLOW_DOWN];
+  const type = typeArr[Math.floor(Math.random() * typeArr.length)];
+
+  // Random vị trí Z: 0 (giữa), 1 (phải), 2 (trái)
+  const pipeIndex = Math.floor(Math.random() * 3); // 0, 1, 2
+  const pos = new THREE.Vector3(
+    nextPipe.centerX,
+    nextPipe.gapCenterY,
+    nextPipe.lowerPipes[pipeIndex].position.z // Lấy đúng vị trí z của pipe tương ứng
+  );
+  const powerUp = new PowerUp(scene, type, pos);
+  powerUp.pipe = nextPipe;
+  powerUps.push(powerUp);
+}
+
+// setInterval(() => {
+//   if (gameStarted && pipesStarted) spawnPowerUp();
+// }, 5000); // 5 giây 1 lần
 
 function checkCollision() {
   if (!bird.model) return false;
@@ -60,6 +95,11 @@ function checkCollision() {
       const upperBox = new THREE.Box3().setFromObject(pipeGroup.upperPipes[pipeIndex]);
 
       if (birdBox.intersectsBox(lowerBox) || birdBox.intersectsBox(upperBox)) {
+        if (immune) {
+          immune = false;
+          immuneTimer = 0;
+          return false; // Không chết, chỉ mất hiệu ứng miễn nhiễm
+        }
         return true;
       }
     }
@@ -72,6 +112,14 @@ function checkScore(){
     if(pipe.position.x < bird.position.x && !pipe.scored){
       pipe.scored = true;
       score++;
+      pipesPassed++; // tăng số pipe đã vượt qua
+      updateScoreBoard(); // <-- Thêm dòng này
+      // Spawn power up nếu đủ số pipe
+      if (pipesPassed >= pipesToNextPowerUp) {
+        spawnPowerUp();
+        pipesPassed = 0;
+        pipesToNextPowerUp = getRandomPipeCount();
+      }
       console.log('Điểm: ' + score);
     }
   });
@@ -79,6 +127,7 @@ function checkScore(){
 
 function resetGame(){
   score = 0;
+  updateScoreBoard(); // <-- Thêm dòng này
   pipesStarted = false;    // reset lại flag pipesStarted
   pipesDelayTimer = 0;     // reset lại bộ đếm delay
   console.log('Điểm: 0');
@@ -119,6 +168,14 @@ window.addEventListener('click', ()=>{
 
 const clock = new THREE.Clock();
 
+let pipesPassed = 0;
+let pipesToNextPowerUp = getRandomPipeCount();
+let pipeSpeed = 0.1; // tốc độ ban đầu
+
+function getRandomPipeCount() {
+  return Math.floor(Math.random() * 6) + 5; // 5 đến 10
+}
+
 function animate() {
   requestAnimationFrame(animate);
 
@@ -135,7 +192,7 @@ function animate() {
     }
 
     if (pipesStarted) {
-      pipes.forEach(pipe => pipe.update(0.05));
+      pipes.forEach(pipe => pipe.update(pipeSpeed * speedModifier));
       checkScore();
 
       if (checkCollision()) {
@@ -144,9 +201,60 @@ function animate() {
         alert('Game Over! Điểm: ' + score);
         resetGame();
       }
+      // Tăng tốc độ dần
+      pipeSpeed += 0.00005; // điều chỉnh giá trị này nếu muốn tăng nhanh/chậm hơn
     }
   }
 
+  // Xoay power up cho dễ nhìn
+powerUps.forEach(pu => {
+  if (pu.active && pu.pipe && pu.pipe.loaded) {
+    pu.mesh.position.x = pu.pipe.centerX;
+    pu.mesh.position.y = pu.pipe.gapCenterY;
+    // Không đặt lại pu.mesh.position.z!
+  }
+  if (pu.active) pu.mesh.rotation.y += 0.05;
+});
+
+// Kiểm tra va chạm với chim
+if (bird.model) {
+  const birdBox = new THREE.Box3().setFromObject(bird.model);
+  powerUps.forEach(pu => {
+    if (!pu.active) return;
+    const puBox = new THREE.Box3().setFromObject(pu.mesh);
+    if (birdBox.intersectsBox(puBox)) {
+      // Áp dụng hiệu ứng
+      if (pu.type === POWERUP_TYPES.POINT) {
+        score += 5;
+        updateScoreBoard();
+        showItemMessage('+5 điểm');
+      }
+      if (pu.type === POWERUP_TYPES.SPEED_UP) {
+        speedModifier = 1.5;
+        speedTimer = 5;
+        showItemMessage('Tăng tốc');
+      }
+      if (pu.type === POWERUP_TYPES.SLOW_DOWN) {
+        speedModifier = 0.5;
+        speedTimer = 5;
+        showItemMessage('Chậm lại');
+      }
+      pu.remove(scene);
+    }
+  });
+}
+
+// Giảm thời gian hiệu ứng
+if (immuneTimer > 0) {
+  immuneTimer -= 1/60;
+  if (immuneTimer <= 0) immune = false;
+}
+if (speedTimer > 0) {
+  speedTimer -= 1/60;
+  if (speedTimer <= 0) speedModifier = 1;
+}
+
+  updateScoreBoard(); // Thêm dòng này vào cuối hàm animate
   controls.update();
   renderer.render(scene, camera);
 }
@@ -267,6 +375,23 @@ function togglePause() {
     console.log('Game tạm dừng');
   } else {
     pauseBtn.innerText = 'Pause';
-    console.log('Game tiếp tục');
-  }
+  } console.log('Game tiếp tục');
+}
+
+function showItemMessage(message) {
+  const timerDiv = document.getElementById('item-timer');
+  timerDiv.style.display = 'block';
+  timerDiv.textContent = message;
+
+  // Clear timeout cũ nếu có
+  if (showItemMessage.timeout) clearTimeout(showItemMessage.timeout);
+
+  showItemMessage.timeout = setTimeout(() => {
+    timerDiv.style.display = 'none';
+  }, 1200); // 1.2 giây
+}
+
+function updateScoreBoard() {
+  const scoreDiv = document.getElementById('score-board');
+  if (scoreDiv) scoreDiv.textContent = `Điểm: ${score}`;
 }

@@ -24,10 +24,36 @@
     #startButton:hover {
       background-color: #218838;
     }
+    /* Thời gian còn lại */
+    #item-timer {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-size: 22px;
+      color: #fff;
+      z-index: 10;
+      display: none;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 8px 16px;
+      border-radius: 8px;
+    }
+
+    #score-board, #item-timer, #startButton {
+      position: fixed;
+      z-index: 1000 !important;
+      pointer-events: none; /* Đảm bảo không bị block bởi canvas */
+    }
+    #startButton { pointer-events: auto; }
   </style>
 </head>
 <body>
   <button id="startButton">Start Game</button>
+  <div id="item-timer" style="position:fixed;top:20px;right:20px;font-size:22px;color:#fff;z-index:10;display:none;background:rgba(0,0,0,0.5);padding:8px 16px;border-radius:8px;">
+    0s
+  </div>
+  <div id="score-board" style="position:fixed;top:20px;left:20px;font-size:28px;color:#fff;z-index:10;background:rgba(0,0,0,0.5);padding:8px 16px;border-radius:8px;">
+  Điểm: 0
+  </div>
   <script type="module" src="./js/main.js"></script>
 </body>
 </html>

@@ -13,6 +13,7 @@ export class PipePair {
     this.lowerPipes = [];
     this.loaded = false;
     this.scored = false;
+    this.loaded = true;
 
     this.gapCenterY = Math.random() * 10 - 5;
     this.randomOffsets = []; // Mảng lưu offset ngẫu nhiên theo trục Y cho từng cột
