@@ -4,6 +4,8 @@ import { Bird } from './bird.js';
 import { PipePair } from './pipe.js'; 
 import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 import { PowerUp, POWERUP_TYPES } from './powerup.js';
+import { BuildingManager } from './building.js';
+
 
 const hitSound = new Audio('./assets/sounds/low-metal-hit-2-81779.mp3');
 const scene = new THREE.Scene();
@@ -17,6 +19,12 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 // renderer.setClearColor(0xaaaaaa);
 renderer.setClearColor(0x8ba2c7);
 document.body.appendChild(renderer.domElement);
+
+// building scene
+const buildingManager = new BuildingManager(scene, 
+            './assets/building/scene.gltf', 
+            './assets/building2/scene.gltf', 
+            100, -50, 0);
 
 // Ánh sáng
 const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
@@ -35,8 +43,8 @@ document.addEventListener('mousemove', (event) => {
 });
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableZoom = false;
-controls.enablePan = false;
+// controls.enableZoom = false;
+// controls.enablePan = false;
 controls.target.set(0,0,0);
 // Giả lập quay khi rê chuột bằng cách trigger chuột trái tự động
 renderer.domElement.addEventListener('mousemove', (e) => {
@@ -57,8 +65,18 @@ controls.update();
 // controls.update();
 
 
+const birdModel = [
+  './assets/flying_flamingo/scene.gltf',
+  './assets/phoenix_bird/scene.gltf',
+  './assets/flappy_bird3d_remodel/scene.gltf',
+  './assets/seagull/scene.gltf'
+];
+let birdIndex = 1;
+const maxBirds = 4;
+let bird = new Bird(scene, './assets/flying_flamingo/scene.gltf');
 
-const bird = new Bird(scene, './assets/phoenix_bird/scene.gltf');
+
+
 
 const pipes = [];
 const pipeCount = 5;
@@ -157,6 +175,12 @@ function checkScore(){
 
 function resetGame(){
   score = 0;
+  pipeSpeed = 0.1; // reset tốc độ về ban đầu
+  buildingManager.speedRef = 0; // cập nhật tốc độ cho building manager
+  speedModifier = 1; // reset tốc độ modifier về 1
+  immune = false; // reset hiệu ứng miễn nhiễm
+  immuneTimer = 0; // reset timer miễn nhiễm
+  speedTimer = 0; // reset timer tăng tốc
   updateScoreBoard(); // <-- Thêm dòng này
   pipesStarted = false;    // reset lại flag pipesStarted
   pipesDelayTimer = 0;     // reset lại bộ đếm delay
@@ -173,6 +197,10 @@ function resetGame(){
 
   gameStarted = false;
   const btn = document.getElementById('startButton');
+  const forwBtn = document.getElementById('forward');
+  const backBtn = document.getElementById('backward');
+  if(forwBtn) forwBtn.style.display = 'block';
+  if(backBtn) backBtn.style.display = 'block';
   // if(btn) btn.style.display = 'block';
 }
 
@@ -186,6 +214,10 @@ function startGame(){
   pipesStarted = false;
   pipesDelayTimer = 0;
   const btn = document.getElementById('startButton');
+  const forwBtn = document.getElementById('forward');
+  const backBtn = document.getElementById('backward');
+  if(forwBtn) forwBtn.style.display = 'none';
+  if(backBtn) backBtn.style.display = 'none';
   // if(btn) btn.style.display = 'none';
 }
 
@@ -213,6 +245,7 @@ function animate() {
     // Cập nhật game, di chuyển chim, pipes, check va chạm
     const delta = clock.getDelta();
     bird.update(delta, pipes);
+    buildingManager.speedRef = 0; // cập nhật tốc độ cho building manager
 
     if (!pipesStarted) {
       pipesDelayTimer += delta;
@@ -233,7 +266,9 @@ function animate() {
       }
       // Tăng tốc độ dần
       pipeSpeed += 0.00005; // điều chỉnh giá trị này nếu muốn tăng nhanh/chậm hơn
+      buildingManager.speedRef = pipeSpeed;
     }
+    buildingManager.update(delta);
   }
   // Xoay power up cho dễ nhìn
 powerUps.forEach(pu => {
@@ -283,6 +318,8 @@ if (speedTimer > 0) {
   if (speedTimer <= 0) speedModifier = 1;
 }
 
+
+  
   updateScoreBoard(); // Thêm dòng này vào cuối hàm animate
   camera.lookAt(0, 0, 0); // luôn nhìn vào tâm cảnh
   controls.update();
@@ -320,7 +357,7 @@ window.addEventListener('resize', ()=>{
 // Tạo hình hộp chữ nhật rất mỏng (thay cho mặt phẳng)
 const boxWidth = 200;
 const boxHeight = 10;   // cao rất thấp để giống mặt phẳng
-const boxDepth = 20;
+const boxDepth = 50;
 
 const boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth); 
 const textureLoader = new THREE.TextureLoader();
@@ -464,3 +501,41 @@ function updateScoreBoard() {
   const scoreDiv = document.getElementById('score-board');
   if (scoreDiv) scoreDiv.textContent = `Điểm: ${score}`;
 }
+
+
+function disposeModel(model) {
+  if (!model) return;
+  model.traverse((child) => {
+    if (child.isMesh) {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach(mat => mat.dispose());
+        } else {
+          child.material.dispose();
+        }
+      }
+    }
+  });
+}
+
+function changeBird(newIndex) {
+  // Xoá chim cũ nếu đã load
+  if (bird && bird.model) {
+    scene.remove(bird.model); // Remove khỏi scene
+    disposeModel(bird.model); // Giải phóng bộ nhớ
+  }
+
+  birdIndex = newIndex;
+  bird = new Bird(scene, birdModel[birdIndex - 1]);
+}
+
+document.getElementById("backward").addEventListener("click", () => {
+  const newIndex = birdIndex - 1 < 1 ? maxBirds : birdIndex - 1;
+  changeBird(newIndex);
+});
+
+document.getElementById("forward").addEventListener("click", () => {
+  const newIndex = birdIndex + 1 > maxBirds ? 1 : birdIndex + 1;
+  changeBird(newIndex);
+});
