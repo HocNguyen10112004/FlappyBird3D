@@ -18,7 +18,36 @@ const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 // renderer.setClearColor(0xaaaaaa);
 renderer.setClearColor(0x8ba2c7);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
+
+// // Tạo đèn DirectionalLight
+// const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+// dirLight.position.set(0, 0, 0);
+// dirLight.castShadow = true;
+// scene.add(dirLight);
+
+// // Cấu hình shadow map để bóng rõ nét
+// dirLight.shadow.mapSize.width = 2048;
+// dirLight.shadow.mapSize.height = 2048;
+
+// dirLight.shadow.camera.near = 0.5;
+// dirLight.shadow.camera.far = 500;
+
+// const camSize = 50;
+// dirLight.shadow.camera.left = -camSize;
+// dirLight.shadow.camera.right = camSize;
+// dirLight.shadow.camera.top = camSize;
+// dirLight.shadow.camera.bottom = -camSize;
+
+// // (tuỳ chọn) Thêm helper để debug vùng chiếu bóng
+// const helper = new THREE.CameraHelper(dirLight.shadow.camera);
+// scene.add(helper);
+
+
+
+
 
 // building scene
 const buildingManager = new BuildingManager(scene, 
@@ -27,10 +56,20 @@ const buildingManager = new BuildingManager(scene,
             100, -50, 0);
 
 // Ánh sáng
-const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
 scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
-directionalLight.position.set(5,10,7);
+directionalLight.position.set(0,5,-3);
+directionalLight.castShadow = true;
+directionalLight.shadow.mapSize.width = 2048;
+directionalLight.shadow.mapSize.height = 2048;
+directionalLight.shadow.camera.near = 0.1;
+directionalLight.shadow.camera.far = 500;
+const camSize = 100;
+directionalLight.shadow.camera.left = -camSize;
+directionalLight.shadow.camera.right = camSize;
+directionalLight.shadow.camera.top = camSize;
+directionalLight.shadow.camera.bottom = -camSize;
 scene.add(directionalLight);
 
 let mouseX = 0;
@@ -239,6 +278,12 @@ function getRandomPipeCount() {
 }
 
 function animate() {
+  scene.traverse((object) => {
+    if (object.isMesh) {
+      object.castShadow = true;
+      object.receiveShadow = true;
+    }
+  });
   requestAnimationFrame(animate);
 
   if (gameStarted && !gamePaused) {
