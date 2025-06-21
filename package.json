@@ -11,7 +11,8 @@
   "dependencies": {
     "cannon-es": "^0.20.0",
     "flappy-bird-3d": "file:",
-    "three": "^0.176.0"
+    "three": "^0.176.0",
+    "yarn": "^1.22.22"
   },
   "devDependencies": {
     "@parcel/config-default": "^2.15.2",
